@@ -33,23 +33,25 @@ options:
     description:
       - Whether to build the app after cloning.
     required: False
-    default: true
+    default: if-changes
+    choices: [ "if-changes", "false", "true" ]
     aliases: []
 author: Jose Diaz-Gonzalez
 """
 
 EXAMPLES = """
 
-- name: clone a git repository and build app
+- name: clone a git repository and build app if necessary
   dokku_clone:
       app: example-app
       repository: https://github.com/heroku/node-js-getting-started
-      version: b10a4d7a20a6bbe49655769c526a2b424e0e5d0b
+      build: if-changes
 - name: clone specific tag from git repository and build app
   dokku_clone:
       app: example-app
       repository: https://github.com/heroku/node-js-getting-started
       version: b10a4d7a20a6bbe49655769c526a2b424e0e5d0b
+      build: true
 - name: sync git repository without building app
   dokku_clone:
       app: example-app
@@ -74,8 +76,10 @@ def dokku_clone(data):
     )
     if data["version"]:
         command_git_sync += " {version}".format(version=data["version"])
-    if data["build"]:
+    if data["build"] == "true":
         command_git_sync += " --build"
+    elif data["build"] == "if-changes":
+        command_git_sync += " --build-if-changes"
     try:
         subprocess.check_output(command_git_sync, stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
@@ -90,7 +94,7 @@ def dokku_clone(data):
     finally:
         meta["present"] = True  # meaning: requested *version* of app is present
 
-    if data["build"] or dokku_git_sha(data["app"]) != sha_old:
+    if data["build"] == "true" or dokku_git_sha(data["app"]) != sha_old:
         has_changed = True
 
     return (is_error, has_changed, meta)
@@ -101,7 +105,12 @@ def main():
         "app": {"required": True, "type": "str"},
         "repository": {"required": True, "type": "str"},
         "version": {"required": False, "type": "str"},
-        "build": {"default": True, "required": False, "type": "bool"},
+        "build": {
+            "required": False,
+            "default": "if-changes",
+            "choices": ["if-changes", "false", "true"],
+            "type": "str",
+        },
     }
 
     module = AnsibleModule(argument_spec=fields, supports_check_mode=False)
