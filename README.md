@@ -346,23 +346,24 @@ Clone a git repository and deploy app.
 |Parameter|Choices/Defaults|Comments|
 |---------|----------------|--------|
 |app<br /><sup>*required*</sup>||The name of the app|
-|build|*Default:* True|Whether to build the app after cloning.|
+|build|*Choices:* <ul><li>**if-changes** (default)</li><li>false</li><li>true</li></ul>|Whether to build the app after cloning.|
 |repository<br /><sup>*required*</sup>||Git repository url|
 |version||Git tree (tag or branch name). If not provided, default branch is used.|
 
 #### Example
 
 ```yaml
-- name: clone a git repository and build app
+- name: clone a git repository and build app if necessary
   dokku_clone:
       app: example-app
       repository: https://github.com/heroku/node-js-getting-started
-      version: b10a4d7a20a6bbe49655769c526a2b424e0e5d0b
+      build: if-changes
 - name: clone specific tag from git repository and build app
   dokku_clone:
       app: example-app
       repository: https://github.com/heroku/node-js-getting-started
       version: b10a4d7a20a6bbe49655769c526a2b424e0e5d0b
+      build: true
 - name: sync git repository without building app
   dokku_clone:
       app: example-app
