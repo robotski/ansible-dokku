@@ -124,6 +124,30 @@
       msg: |
         Re-cloning example app resulted in changed status
 
+  # Testing clone idempotence
+  - name: rebuild example app
+    dokku_clone:
+      app: example-app
+      repository: https://github.com/heroku/node-js-getting-started
+      version: b10a4d7a20a6bbe49655769c526a2b424e0e5d0b
+      build: true
+    register: idempotent_before
+
+  - name: reclone example app
+    dokku_clone:
+      app: example-app
+      repository: https://github.com/heroku/node-js-getting-started
+      version: b10a4d7a20a6bbe49655769c526a2b424e0e5d0b
+      build: if-changes
+    register: idempotent_after
+
+  - name: Check that the app is deployed once
+    assert:
+      that:
+      - (idempotent_before.changed) and (not idempotent_after.changed)
+      msg: |
+        The app was deployed twice
+
   # Testing dokku_network
   - name: Create a network # noqa 301
     dokku_network:
