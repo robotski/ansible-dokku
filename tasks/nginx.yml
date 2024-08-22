@@ -41,4 +41,4 @@
     - reload nginx
     tags:
     - dokku
-    when: dokku_manage_nginx
+  when: dokku_manage_nginx
